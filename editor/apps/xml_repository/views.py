@@ -1,9 +1,11 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.conf import settings
 
 import os
 
-from .models import XMLRepository
+from .models import XMLRepository, XMLFile
+from .forms import BasicXMLForm
 
 def base_view(request):
     return render(request, "repository_contents.html")
@@ -18,7 +20,7 @@ def xml_repository_contents(request, repository_name):
     repo = XMLRepository(repository_name)
     return render(request, "xml_repository_contents.html", {"repository": repo})
 
-def view_xml_file(request, dir_path, file_path):
+def edit_xml_file(request, dir_path, file_path):
     """TODO: Docstring for view_xml_file.
 
     :request: TODO
@@ -26,7 +28,7 @@ def view_xml_file(request, dir_path, file_path):
     :returns: TODO
 
     """
-    file_path = os.path.join("../data/", dir_path, file_path)
-    with open(file_path, 'r') as f_in:
-        text = f_in.read()
-    return HttpResponse(text)
+    file_path = os.path.join(settings.DATA_DIR, dir_path, file_path)
+    f = XMLFile(file_path)
+    form = BasicXMLForm(initial={'xml_text': f.as_text()}) 
+    return render(request, "xml_repository_xml_file.html", {"form": form})

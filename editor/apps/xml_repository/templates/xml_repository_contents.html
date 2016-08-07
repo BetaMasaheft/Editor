@@ -6,6 +6,7 @@
 <h3 class="sub-header">{{ repository.name }}</h2>
 <div class="table-responsive">
 <table class="table table-striped">
+  {{repository.changed_xml_files }}
   <thead>
     <tr>
       {% for file_key in repository.formatted_content_list.0.keys %}
@@ -19,6 +20,7 @@
       {% for file_value in file.values %}
       <td>{{ file_value }}</td>
       {% endfor %}
+      <td><a href="{% url 'edit_xml_file' repository.name "LOC1001Aallee.xml" %}">Edit</a></td>
     </tr>
     {% endfor %}
   </tbody>

@@ -1,0 +1,14 @@
+{% extends 'xml_repository_base.html' %}
+
+{% block page_title %} {{ xml_file.name }} {% endblock %}
+
+{% block main_content %}
+<h3 class="sub-header">{{ xml_file.name }}</h2>
+<div>
+  <form action="/" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Submit" />
+  </form>
+</div>
+{% endblock %} 
