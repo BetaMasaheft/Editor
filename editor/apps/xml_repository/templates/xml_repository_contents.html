@@ -1,0 +1,27 @@
+{% extends 'xml_repository_base.html' %}
+
+{% block page_title %} {{ repository.name }} {% endblock %}
+
+{% block main_content %}
+<h3 class="sub-header">{{ repository.name }}</h2>
+<div class="table-responsive">
+<table class="table table-striped">
+  <thead>
+    <tr>
+      {% for file_key in repository.formatted_content_list.0.keys %}
+      <th>{{ file_key }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for file in repository.formatted_content_list %}
+    <tr>
+      {% for file_value in file.values %}
+      <td>{{ file_value }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %} 
