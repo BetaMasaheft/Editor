@@ -39,8 +39,9 @@ INSTALLED_APPS = [
 
     'bootstrap3',
 
-    'editor.apps.xml_repository',
-
+    'editor.apps.repository',
+    'editor.apps.files',
+    'editor.apps.edit_forms',
 ]
 
 MIDDLEWARE = [
@@ -66,7 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'editor.apps.xml_repository.context_processors.repository_list'
+                'editor.apps.repository.context_processors.repository_list'
             ],
         },
     },

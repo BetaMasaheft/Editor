@@ -17,6 +17,7 @@ from django.conf.urls import url, include
 from django.contrib import admin
 
 urlpatterns = [
-    url(r'^', include('editor.apps.xml_repository.urls')),
     url(r'^admin/', admin.site.urls),
+    url(r'^', include('editor.apps.repository.urls')),
+    url(r'^', include('editor.apps.files.urls')),
 ]

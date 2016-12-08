@@ -36,7 +36,7 @@
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
             {% for repo in repository_list %} 
-            <li><a href="{% url 'xml_repository_contents' repo %}">{{ repo }}</a></li>
+            <li><a href="{% url 'repository_contents' repo %}">{{ repo }}</a></li>
             {% endfor %}
           </ul>
         </div>
