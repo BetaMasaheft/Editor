@@ -1,20 +1,73 @@
 from django.shortcuts import render
 from django.conf import settings
+from django.urls import reverse
 
 from .models import *
 from .constructors import *
 
-#from editor.apps.edit_forms.constructors import *
+from editor.apps.xml_edit_forms.utils import generate_form
+from editor.apps.xml_edit_forms.forms import *
+from editor.apps.repository.models import Repository
 
-def edit_file(request, dir_path, file_path):
-    """TODO: Docstring for view_xml_file.
+def view_file_or_directory(request, repository_name, url_node_path=""):
+    """ Delegate display of a path to the directory or file view. """
+    repository = Repository.objects.get(repository_name=repository_name) 
+    fs_full_path = os.path.join(repository.path, url_node_path)
+    print(request.GET)
+    if os.path.isdir(fs_full_path):
+        return _view_directory(request, repository, url_node_path)
+    else: 
+        return _view_file(request, repository, url_node_path)
+
+def edit_html(repo_name, file_name):
+    return format_html("<a href='{}'>{}</a>",
+            reverse('edit_file', args=[repo_name, file_name]),
+            "Edit")
+
+def view_directory(request, repository_name, path="./"):
+    repository = Repository.objects.get(repository_name=repository_name) 
+    full_path = os.path.join(repository.path, node_path)
+    return _view_directory(request, repository, full_path)
+
+def _view_directory(request, repository, url_dir_path):
+    """ List all files in the given directory. """
+    f_info = {
+            "Name": lambda o: o.name,
+            "Type": lambda o: o.ftype,
+            "Edit": lambda o: o.generate_html(
+                "<a href='{}'>{}</a>",
+                reverse('view_file_or_directory', args=[repository.repository_name, os.path.join(url_dir_path, o.name)]),
+                "Edit")
+            } 
+    fs_full_path = os.path.join(repository.path, url_dir_path)
+    directory = Directory(fs_full_path)
+    file_info = [f.create_info(f_info) for f in directory.files]
+    repository.xml_files = file_info
+
+    return render(request, "view_directory.html", {
+        "repository": repository,
+        })
+
+def _view_file(request, repository, url_file_path):
+    """Provides a view that allows the file contents to be viewed, but not edited. 
 
     :request: TODO
-    :file_path: TODO
+    :repository_name: TODO
+    :file_name: TODO
     :returns: TODO
 
     """
-    file_path = os.path.join(settings.DATA_DIR, dir_path, file_path)
+    if request.GET.get('mode') == 'edit':
+        return _edit_file(request, repository, url_node_path)
+    fs_full_path = os.path.join(repository.path, url_file_path)
+    f = to_file_type(BaseFile(fs_full_path))
+    form = XMLForm(initial={"text":f.text})
+    return render(request, "view_file.html", {"f": f, "form": form})
+
+def _edit_file(request, repository_name, file_name, form_type="text_form"):
+    file_path = os.path.join(settings.DATA_DIR, repository_name, file_name)
     f = to_file_type(BaseFile(file_path))
-    form = assign_form(f)
-    return render(request, "xml_repository_xml_file.html", {"form": form})
+
+    form = generate_form(form_type, f)
+
+    return render(request, "dynamic_edit_file.html", {"f": f, "form": form})

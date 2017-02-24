@@ -38,10 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'bootstrap3',
+    'django_ace',
+    'social_django',
 
-    'editor.apps.repository',
+    'editor.apps.core',
     'editor.apps.files',
-    'editor.apps.edit_forms',
+    'editor.apps.git_user',
+    'editor.apps.repository',
+    'editor.apps.xml_edit_forms',
 ]
 
 MIDDLEWARE = [
@@ -67,7 +71,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'editor.apps.repository.context_processors.repository_list'
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
+                'editor.apps.repository.context_processors.repository_list',
+                'editor.apps.git_user.context_processors.git_user'
             ],
         },
     },
@@ -106,6 +113,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = ( 
+        'social_core.backends.github.GithubOAuth2',
+
+        'django.contrib.auth.backends.ModelBackend',
+        )
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 
@@ -122,5 +135,15 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
         os.path.join(PROJECT_DIR, "static")
         ]
+STATIC_ROOT = os.path.join(BASE_DIR, "../static/")
 
 DATA_DIR = os.path.join(BASE_DIR, "../data/")
+MEDIA_ROOT = os.path.join(DATA_DIR, "media")
+
+LOGIN_URL = 'home'
+LOGOUT_URL = 'logout'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+SOCIAL_AUTH_GITHUB_KEY ='56fec182e20b87c0f62c'
+SOCIAL_AUTH_GITHUB_SECRET ='5b3875a5cea65c9024c08e24ecac913e3d18671d'

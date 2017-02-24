@@ -1,4 +1,4 @@
-{% extends 'xml_repository_base.html' %}
+{% extends 'dashboard_base.html' %}
 
 {% block page_title %} {{ xml_file.name }} {% endblock %}
 
@@ -7,6 +7,7 @@
 <div>
   <form action="/" method="post">
     {% csrf_token %}
+    {{ form.media }}
     {{ form }}
     <input type="submit" value="Submit" />
   </form>

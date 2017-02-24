@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://raw.githubusercontent.com/SChAth/schema/master/tei-betamesaheft.rng" 
+schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="https://raw.githubusercontent.com/SChAth/schema/master/tei-betamesaheft.rng" 
+type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0"
+     type="place"
+     xml:lang="en"
+     xml:id="LOC1001Aallee">
+   <teiHeader>
+      <fileDesc>
+         <titleStmt>
+            <title>Aallee</title>
+            <editor key="FP"/>
+            <funder>Akademie der Wissenschaften in Hamburg</funder>
+         </titleStmt>
+         <publicationStmt>
+            <authority>Gazetteer of Places related to Ethiopian Written tradition, Hiob Ludolf Zentrum für Äthiopistik</authority>
+            <pubPlace>Hamburg</pubPlace>
+            <publisher>Die Schriftkultur des christlichen Äthiopiens: Eine multimediale
+                Forschungsumgebung / beta maṣāḥǝft</publisher>
+            <availability>
+               <licence target="http://creativecommons.org/licenses/by-sa/4.0/">
+                  <p> This file is licensed
+                        under the Creative Commons Attribution-ShareAlike 4.0. </p>
+               </licence>
+            </availability>
+            
+            <date>2016-03-21</date>
+         </publicationStmt>
+         <sourceDesc>
+            <p>A TEI file converted from the ETHIO-authority google spreadsheet</p>
+         </sourceDesc>
+      </fileDesc>
+      <profileDesc>
+         <langUsage>
+            <language ident="en">English</language>
+            <language ident="ar">Arabic</language>
+            <language ident="it">Italiano</language>
+            <language ident="gez">Gǝʿǝz</language>
+         </langUsage>
+      </profileDesc>
+      <revisionDesc>
+         <change when="2016-09-21" who="FP">added comment regarding place name</change>
+         <change when="2016-08-19" who="FP">corrections</change>
+         <change when="2016-08-03" who="FP">added information from EnAe</change>
+         <change who="PL" when="2016-04-27">harmonized typology based on Eugenia indication in Issue
+            48.</change>
+         <change who="PL" when="2016-03-21"> Created file from google spreadsheet </change>
+         <change who="ES" when="2016-02-09">CREATED: place</change>
+      </revisionDesc>
+   </teiHeader>
+   <text>
+      <body>
+         <listPlace>
+            <place type="waradā">
+               <placeName xml:id="n1">Aallee</placeName>
+<!--               translitteration and xml:lang not inserted because not known for sure.-->
+               <country ref="LOC3010Ethiop"/>
+               <region notBefore="1991" type="RegionalState" ref="LOC6530Oromiyaa"/>
+               <region notAfter="1974" type="Province"/>
+               <settlement type="zone"/>
+               <location>
+                  <geo cert="low">8.431601 35.688606</geo>
+               </location>
+               <listBibl type="secondary">
+                  <bibl>
+                     <ptr target="bm:Zitelmann2007EnAeIllubabor"/>
+                  </bibl>
+               </listBibl>
+               <note>
+                  <date type="foundation" atLeast="1991">After 1991</date>
+                  <ab type="description">Aallee is one of 12 <placeName>waradā</placeName> created in the highland
+                        <placeName ref="LOC3924Illuba">Illubabor </placeName> after <date>1991</date> and the
+                     introduction of "ethnic federalism". </ab>
+               </note>
+            </place>
+            <listRelation>
+               <relation name="gn:locatedIn" active="LOC1001Aallee" passive="LOC3924Illuba"/>
+            </listRelation>
+         </listPlace>
+      </body>
+   </text>
+</TEI>

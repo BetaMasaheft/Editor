@@ -1,5 +1,6 @@
 import os
 from django.conf import settings
+from .models import *
 
 def repository_list(request):
-    return {'repository_list': os.listdir(settings.DATA_DIR)}
+    return {'repository_list': Repository.objects.all()}
