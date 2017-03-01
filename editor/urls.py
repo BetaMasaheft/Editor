@@ -22,14 +22,12 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
 
-    url(r'^$', core_views.home, name='home'),
+    url(r'^_editor/$', core_views.home, name='home'),
+    url(r'^_editor/admin/', admin.site.urls),
+    url(r'^_editor/login/$', auth_views.login, name='login'),
+    url(r'^_editor/logout/$', auth_views.logout, name='logout'),
+    url(r'^_editor/oauth/', include('social_django.urls', namespace='social')),
 
-    url(r'^login/$', auth_views.login, name='login'),
-    url(r'^logout/$', auth_views.logout, name='logout'),
-    url(r'^oauth/', include('social.apps.django_app.urls', namespace='social')),  # <--
-
-    url(r'^_admin/', admin.site.urls),
-
-    url(r'^repository/', include('editor.apps.repository.urls')),
-    url(r'^repository/', include('editor.apps.files.urls')),
+    url(r'^_editor/repository/', include('editor.apps.repository.urls')),
+    url(r'^_editor/repository/', include('editor.apps.files.urls')),
 ]

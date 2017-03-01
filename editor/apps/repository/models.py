@@ -13,7 +13,7 @@ class RemoteRepository(models.Model):
     source_url = models.URLField(max_length=400)
 
     def __str__(self):
-        return "{}: {}".format(self.repository_name, self.source_url)
+        return "{}: {}".format(self.name, self.source_url)
 
 class LocalUserRepository():
 

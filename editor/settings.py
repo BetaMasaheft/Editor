@@ -25,7 +25,7 @@ SECRET_KEY = 'n6o#1bv*h@e$640ku@yfa_hj4n)reiffpsa^r7$kqdi+o%qyxh'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['betamasaheft.aai.uni-hamburg.de']
 
 # Application definition
 
@@ -37,9 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'social_django',
     'bootstrap3',
     'django_ace',
-    'social_django',
 
     'editor.apps.core',
     'editor.apps.files',
@@ -131,7 +131,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/_editor/static/'
 STATICFILES_DIRS = [
         os.path.join(PROJECT_DIR, "static")
         ]

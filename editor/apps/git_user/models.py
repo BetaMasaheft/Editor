@@ -4,6 +4,8 @@ from django.db import models
 from django.utils.functional import cached_property
 from django.conf import settings
 
+from social_django.models import UserSocialAuth
+
 from github import Github
 from git import Actor
 
