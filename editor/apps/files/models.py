@@ -1,15 +1,18 @@
 import os
 import functools as f
+import types
 
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.html import *
 
+from editor.apps.xml_edit_forms.forms import *
+
 from lxml import etree
 
 class BaseNode():
     
-    def __init__(self, path):
+    def __init__(self, path=""):
         self.path = path
         self.name = os.path.split(self.path)[1]
         self.ext = os.path.splitext(self.name)[1]
@@ -44,6 +47,13 @@ class Directory(BaseNode):
     def files(self):
         return [to_file_type(f) for f in self.contents]
 
+    def file_ok(self, f):
+        exclude = [HiddenDirectory().ftype, HiddenFile().ftype]
+        return f.ftype not in exclude
+
+    def display_files(self):
+        return [f for f in self.files if self.file_ok(f)]
+
 class BaseFile(BaseNode):
 
     @cached_property
@@ -51,6 +61,12 @@ class BaseFile(BaseNode):
         with open(self.path, 'r') as file_in:
             text = file_in.read()
         return text
+
+    def form_types(self):
+        """ Returns a list of possible file types for this file """
+        return [TextForm]
+
+class HiddenDirectory(Directory): pass
 
 class HiddenFile(BaseFile): pass
 
@@ -92,21 +108,36 @@ class XMLFile(BaseXMLFile):
         else:
             return False
 
+    @cached_property
+    def form_types(self):
+        """ Returns a list of possible file types for this file """
+        return [XMLForm]
+
+class TEITypedXMLFile(XMLFile):
+    type_xpath = "/ns:TEI/@type"
+    type_string = ""
+
+class TEIPlace(TEITypedXMLFile):
+    type_string = "place"
+
+    def form_types(self):
+        """ Returns a list of possible file types for this file """
+        return [TextForm, XMLForm]
+
+class TEIPerson(TEITypedXMLFile):
+    type_string = "pers"
+
+class TEIWork(TEITypedXMLFile):
+    type_string = "work"
+
+class TEIManuscript(TEITypedXMLFile):
+    type_string = "mss"
+
+FILE_TYPE_CHOICES = tuple((str(ft().ftype), str(ft().ftype)) for ft in TEITypedXMLFile.__subclasses__())
+
 class TemplateXMLFile(models.Model):
-    template_for_type = models.ForeignKey('TypedXMLFile')
+    file_type = models.CharField(max_length=100, choices=FILE_TYPE_CHOICES)
     template_file = models.FileField(upload_to='templates/')
-
-class TypedXMLFile(models.Model):
-    file_type = models.CharField(max_length=200)
-    type_xpath = models.CharField(max_length=1000)
-    type_string = models.CharField(max_length=200)
-
-    def __str__(self):
-        return self.file_type
-
-    def create_class(self):
-             return type(self.file_type, (XMLFile,), {})
-    
 
 def to_class(cls, obj):
     """Changes the class of an object to the provided Class. 
@@ -122,13 +153,18 @@ def to_class(cls, obj):
 identity = lambda x: x
 to_basefile = f.partial(to_class, BaseNode)
 to_directory = f.partial(to_class, Directory)
+to_hidden_file = f.partial(to_class, HiddenFile)
+to_hidden_directory = f.partial(to_class, HiddenDirectory)
 to_markdown = f.partial(to_class, MarkdownFile)
 
-def to_typed_xml(xmlf):
-    for t in TypedXMLFile.objects.all():
-        if xmlf.string_at_xpath(t.type_xpath, t.type_string):
-            xmlf = to_class(t.create_class(), xmlf)
-        break
+def tei_typed_xml_file_types():
+    return TEITypedXMLFile.__subclasses__()
+
+def to_tei_typed_xml(xmlf):
+    for tei_type in tei_typed_xml_file_types():
+        if xmlf.string_at_xpath(tei_type.type_xpath, tei_type.type_string):
+            xmlf = to_class(tei_type, xmlf)
+            break
     return xmlf
 
 def to_xml_type(bf):
@@ -141,7 +177,7 @@ def to_xml_type(bf):
         tree = etree.parse(f.path)
         f = to_class(XMLFile, f)
         f.parsed_tree = tree
-        f = to_typed_xml(f)
+        f = to_tei_typed_xml(f)
     except Exception as e: 
         f = to_class(UnparsableXMLFile, f)
     return f
@@ -156,8 +192,14 @@ def to_file_type(bf):
     return _type_assigners.get(bf.ext, identity)(bf)
 
 def to_directory_or_file(path):
-    if os.path.isdir(path):
-        return Directory(path)
-    else: 
-        return BaseFile(path)
-
+    bn = BaseNode(path)
+    if bn.name.startswith('.'):
+        if os.path.isdir(bn.path):
+            return to_hidden_directory(bn)
+        else: 
+            return to_hidden_file(bn)
+    else:
+        if os.path.isdir(bn.path):
+            return to_directory(bn)
+        else: 
+            return to_basefile(bn)

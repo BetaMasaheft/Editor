@@ -1,19 +1,26 @@
 from django.shortcuts import render
 from django.conf import settings
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
 from .models import *
 from .constructors import *
 
 from editor.apps.xml_edit_forms.utils import generate_form
 from editor.apps.xml_edit_forms.forms import *
-from editor.apps.repository.models import Repository
+from editor.apps.repository.models import * 
+from editor.apps.git_user.models import *
+from django import forms
 
+@login_required
 def view_file_or_directory(request, repository_name, url_node_path=""):
     """ Delegate display of a path to the directory or file view. """
-    repository = Repository.objects.get(repository_name=repository_name) 
+    remote_repository = RemoteRepository.objects.get(name=repository_name) 
+    user = init_git_user(request) 
+
+    repository = LocalUserRepository(user, remote_repository)
     fs_full_path = os.path.join(repository.path, url_node_path)
-    print(request.GET)
+
     if os.path.isdir(fs_full_path):
         return _view_directory(request, repository, url_node_path)
     else: 
@@ -24,6 +31,7 @@ def edit_html(repo_name, file_name):
             reverse('edit_file', args=[repo_name, file_name]),
             "Edit")
 
+@login_required
 def view_directory(request, repository_name, path="./"):
     repository = Repository.objects.get(repository_name=repository_name) 
     full_path = os.path.join(repository.path, node_path)
@@ -36,12 +44,12 @@ def _view_directory(request, repository, url_dir_path):
             "Type": lambda o: o.ftype,
             "Edit": lambda o: o.generate_html(
                 "<a href='{}'>{}</a>",
-                reverse('view_file_or_directory', args=[repository.repository_name, os.path.join(url_dir_path, o.name)]),
+                reverse('view_file_or_directory', args=[repository.repository.name, os.path.join(url_dir_path, o.name)]),
                 "Edit")
             } 
     fs_full_path = os.path.join(repository.path, url_dir_path)
     directory = Directory(fs_full_path)
-    file_info = [f.create_info(f_info) for f in directory.files]
+    file_info = [f.create_info(f_info) for f in directory.display_files()]
     repository.xml_files = file_info
 
     return render(request, "view_directory.html", {
@@ -58,16 +66,19 @@ def _view_file(request, repository, url_file_path):
 
     """
     if request.GET.get('mode') == 'edit':
-        return _edit_file(request, repository, url_node_path)
+        return _edit_file(request, repository, url_file_path)
     fs_full_path = os.path.join(repository.path, url_file_path)
     f = to_file_type(BaseFile(fs_full_path))
-    form = XMLForm(initial={"text":f.text})
+    form = XMLForm(initial={'text':f.text})
+
+
     return render(request, "view_file.html", {"f": f, "form": form})
 
-def _edit_file(request, repository_name, file_name, form_type="text_form"):
+def _edit_file(request, repository, url_file_path, form_type="text_form"):
+
+    fs_full_path = os.path.join(repository.path, url_file_path)
     file_path = os.path.join(settings.DATA_DIR, repository_name, file_name)
     f = to_file_type(BaseFile(file_path))
-
     form = generate_form(form_type, f)
 
     return render(request, "dynamic_edit_file.html", {"f": f, "form": form})

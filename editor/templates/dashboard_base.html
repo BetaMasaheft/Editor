@@ -49,7 +49,7 @@
           <ul class="nav nav-sidebar">
           {% if git_user %}
             {% for repo in repository_list %} 
-            <li><a href="{% url 'view_file_or_directory' repo.repository_name '' %}">{{ repo.repository_name }}</a></li>
+            <li><a href="{% url 'view_file_or_directory' repo.name '' %}">{{ repo.name }}</a></li>
             {% endfor %}
           {% endif %}
           </ul>
