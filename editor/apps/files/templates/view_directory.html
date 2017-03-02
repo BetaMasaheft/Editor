@@ -4,7 +4,10 @@
 {% block page_title %} {{ repository.name }} {% endblock %}
 
 {% block breadcrumbs %}
-  {% breadcrumb repository.repository.name "view_file_or_directory" repository.repository.name %}
+  {% breadcrumb repository.repository.name "view_file_or_directory" repository.repository.name "" %}
+  {% for b in bcs %}
+  {% breadcrumb b.label "view_file_or_directory" repository.repository.name b.url_path %}
+  {% endfor %}
 {% endblock breadcrumbs %}
 
 {% block main_content %}

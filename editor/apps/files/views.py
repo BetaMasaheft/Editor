@@ -51,9 +51,10 @@ def _view_directory(request, repository, url_dir_path):
     directory = Directory(fs_full_path)
     file_info = [f.create_info(f_info) for f in directory.display_files()]
     repository.xml_files = file_info
-
+    bcs = generate_breadcrumbs(url_dir_path)
     return render(request, "view_directory.html", {
         "repository": repository,
+        "bcs": bcs
         })
 
 def _view_file(request, repository, url_file_path):
@@ -68,6 +69,8 @@ def _view_file(request, repository, url_file_path):
     fs_full_path = os.path.join(repository.path, url_file_path)
     f = to_file_type(BaseFile(fs_full_path))
 
+
+    bcs = generate_breadcrumbs(url_file_path)
     if request.method == 'POST':
         form = XMLForm(request.POST)
         if form.is_valid():
@@ -78,7 +81,13 @@ def _view_file(request, repository, url_file_path):
     else:
         form = XMLForm(initial={'text':f.text})
 
-    return render(request, "view_file.html", {"f": f, "form": form})
+    return render(request, 
+            "view_file.html", 
+            {"f": f, 
+             "repository": repository,
+             "form": form, 
+             "bcs": bcs
+             })
 
 def _edit_file(request, repository, url_file_path, form_type="text_form"):
 
@@ -88,3 +97,13 @@ def _edit_file(request, repository, url_file_path, form_type="text_form"):
     form = generate_form(form_type, f)
 
     return render(request, "dynamic_edit_file.html", {"f": f, "form": form})
+
+def generate_breadcrumbs(path):
+    def _format_breadcrumbs(breadcrumbs, path):
+        head, tail = os.path.split(path)
+        if head:
+            breadcrumbs = _format_breadcrumbs(breadcrumbs, head)
+        breadcrumbs.append({"label": tail, "url_path": path})
+        return breadcrumbs
+    return _format_breadcrumbs([], path)
+

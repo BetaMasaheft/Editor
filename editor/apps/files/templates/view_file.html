@@ -1,6 +1,14 @@
 {% extends 'dashboard_base.html' %}
+{% load django_bootstrap_breadcrumbs %}
 
 {% block page_title %} {{ f.name }} {% endblock %}
+
+{% block breadcrumbs %}
+  {% breadcrumb repository.repository.name "view_file_or_directory" repository.repository.name "" %}
+  {% for b in bcs %}
+  {% breadcrumb b.label "view_file_or_directory" repository.repository.name b.url_path %}
+  {% endfor %}
+{% endblock breadcrumbs %}
 
 {% block main_content %}
 <h3 class="sub-header">{{ f.name }}</h2>
