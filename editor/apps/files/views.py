@@ -65,12 +65,18 @@ def _view_file(request, repository, url_file_path):
     :returns: TODO
 
     """
-    if request.GET.get('mode') == 'edit':
-        return _edit_file(request, repository, url_file_path)
     fs_full_path = os.path.join(repository.path, url_file_path)
     f = to_file_type(BaseFile(fs_full_path))
-    form = XMLForm(initial={'text':f.text})
 
+    if request.method == 'POST':
+        form = XMLForm(request.POST)
+        if form.is_valid():
+            new_text = form.cleaned_data['text']
+            f.write(new_text)
+            form = XMLForm(initial={'text':new_text})
+            return render(request, "view_file.html", {"f": f, "form": form})
+    else:
+        form = XMLForm(initial={'text':f.text})
 
     return render(request, "view_file.html", {"f": f, "form": form})
 

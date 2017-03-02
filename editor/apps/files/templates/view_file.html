@@ -4,6 +4,11 @@
 
 {% block main_content %}
 <h3 class="sub-header">{{ f.name }}</h2>
-{{ form.media }}
-{{ form }}
+
+<form action="" method="post">
+    {% csrf_token %}
+    <input type="submit" class="btn" value="Save" />
+    {{ form.media }}
+    {{ form }}
+</form>
 {% endblock %} 

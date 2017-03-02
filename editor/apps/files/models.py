@@ -62,6 +62,10 @@ class BaseFile(BaseNode):
             text = file_in.read()
         return text
 
+    def write(self, text):
+        with open(self.path, 'w') as file_out:
+            text = file_out.write(text)
+
     def form_types(self):
         """ Returns a list of possible file types for this file """
         return [TextForm]
@@ -107,6 +111,7 @@ class XMLFile(BaseXMLFile):
                 return False
         else:
             return False
+
 
     @cached_property
     def form_types(self):

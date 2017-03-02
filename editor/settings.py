@@ -25,7 +25,8 @@ SECRET_KEY = 'n6o#1bv*h@e$640ku@yfa_hj4n)reiffpsa^r7$kqdi+o%qyxh'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['betamasaheft.aai.uni-hamburg.de']
+#ALLOWED_HOSTS = ['betamasaheft.aai.uni-hamburg.de']
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'social_django',
     'bootstrap3',
     'django_ace',
+    'django_bootstrap_breadcrumbs',
 
     'editor.apps.core',
     'editor.apps.files',
@@ -56,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'editor.urls'

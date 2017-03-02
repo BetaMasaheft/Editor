@@ -7,6 +7,7 @@ ace_options = {
         'theme': 'kuroir', 
         'width': '100%', 
         'height': '600px',
+        'wordwrap': True,
         }
 
 class TextForm(forms.Form):
