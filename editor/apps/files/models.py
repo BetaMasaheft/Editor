@@ -6,8 +6,6 @@ from django.db import models
 from django.utils.functional import cached_property
 from django.utils.html import *
 
-from editor.apps.xml_edit_forms.forms import *
-
 from lxml import etree
 
 class BaseNode():
@@ -47,12 +45,12 @@ class Directory(BaseNode):
     def files(self):
         return [to_file_type(f) for f in self.contents]
 
-    def file_ok(self, f):
-        exclude = [HiddenDirectory().ftype, HiddenFile().ftype]
-        return f.ftype not in exclude
+    def _file_hidden(self, f):
+        hidden_file_types = [HiddenDirectory().ftype, HiddenFile().ftype]
+        return f.ftype in hidden_file_types
 
     def display_files(self):
-        return [f for f in self.files if self.file_ok(f)]
+        return [f for f in self.files if not self._file_hidden(f)]
 
 class BaseFile(BaseNode):
 
@@ -65,10 +63,6 @@ class BaseFile(BaseNode):
     def write(self, text):
         with open(self.path, 'w') as file_out:
             text = file_out.write(text)
-
-    def form_types(self):
-        """ Returns a list of possible file types for this file """
-        return [TextForm]
 
 class HiddenDirectory(Directory): pass
 
@@ -112,22 +106,12 @@ class XMLFile(BaseXMLFile):
         else:
             return False
 
-
-    @cached_property
-    def form_types(self):
-        """ Returns a list of possible file types for this file """
-        return [XMLForm]
-
 class TEITypedXMLFile(XMLFile):
     type_xpath = "/ns:TEI/@type"
     type_string = ""
 
 class TEIPlace(TEITypedXMLFile):
     type_string = "place"
-
-    def form_types(self):
-        """ Returns a list of possible file types for this file """
-        return [TextForm, XMLForm]
 
 class TEIPerson(TEITypedXMLFile):
     type_string = "pers"
@@ -138,10 +122,14 @@ class TEIWork(TEITypedXMLFile):
 class TEIManuscript(TEITypedXMLFile):
     type_string = "mss"
 
-FILE_TYPE_CHOICES = tuple((str(ft().ftype), str(ft().ftype)) for ft in TEITypedXMLFile.__subclasses__())
+def tei_typed_xml_file_types():
+    return TEITypedXMLFile.__subclasses__()
+
+def tei_file_type_choices():
+    return tuple((ft().ftype, ft().ftype) for ft in tei_typed_xml_file_types())
 
 class TemplateXMLFile(models.Model):
-    file_type = models.CharField(max_length=100, choices=FILE_TYPE_CHOICES)
+    file_type = models.CharField(max_length=100, choices=tei_file_type_choices())
     template_file = models.FileField(upload_to='templates/')
 
 def to_class(cls, obj):
@@ -162,8 +150,6 @@ to_hidden_file = f.partial(to_class, HiddenFile)
 to_hidden_directory = f.partial(to_class, HiddenDirectory)
 to_markdown = f.partial(to_class, MarkdownFile)
 
-def tei_typed_xml_file_types():
-    return TEITypedXMLFile.__subclasses__()
 
 def to_tei_typed_xml(xmlf):
     for tei_type in tei_typed_xml_file_types():
@@ -208,3 +194,6 @@ def to_directory_or_file(path):
             return to_directory(bn)
         else: 
             return to_basefile(bn)
+
+def path_to_file_type(path):
+    return to_file_type(to_directory_or_file(path))

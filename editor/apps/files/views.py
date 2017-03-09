@@ -9,6 +9,8 @@ from .constructors import *
 from editor.apps.xml_edit_forms.utils import generate_form
 from editor.apps.xml_edit_forms.forms import *
 from editor.apps.repository.models import * 
+from editor.apps.repository.forms import * 
+from editor.apps.repository.utils import * 
 from editor.apps.git_user.models import *
 from django import forms
 
@@ -17,12 +19,15 @@ def view_file_or_directory(request, repository_name, url_node_path=""):
     """ Delegate display of a path to the directory or file view. """
     remote_repository = RemoteRepository.objects.get(name=repository_name) 
     user = init_git_user(request) 
-
     repository = LocalUserRepository(user, remote_repository)
     fs_full_path = os.path.join(repository.path, url_node_path)
 
     if os.path.isdir(fs_full_path):
-        return _view_directory(request, repository, url_node_path)
+        # This indicates that it's a repository root.
+        if not url_node_path:
+            return _view_repository_root(request, repository)
+        else:
+            return _view_directory(request, repository, url_node_path)
     else: 
         return _view_file(request, repository, url_node_path)
 
@@ -30,12 +35,6 @@ def edit_html(repo_name, file_name):
     return format_html("<a href='{}'>{}</a>",
             reverse('edit_file', args=[repo_name, file_name]),
             "Edit")
-
-@login_required
-def view_directory(request, repository_name, path="./"):
-    repository = Repository.objects.get(repository_name=repository_name) 
-    full_path = os.path.join(repository.path, node_path)
-    return _view_directory(request, repository, full_path)
 
 def _view_directory(request, repository, url_dir_path):
     """ List all files in the given directory. """
@@ -48,12 +47,55 @@ def _view_directory(request, repository, url_dir_path):
                 "Edit")
             } 
     fs_full_path = os.path.join(repository.path, url_dir_path)
+
     directory = Directory(fs_full_path)
-    file_info = [f.create_info(f_info) for f in directory.display_files()]
-    repository.xml_files = file_info
+
+    changed_names = repository.changed_names(directory)
+    unchanged, changed = partition(lambda x: x.name in changed_names, directory.display_files())
+    changed_files = [f.create_info(f_info) for f in changed]
+    unchanged_files = [f.create_info(f_info) for f in unchanged]
+    
     bcs = generate_breadcrumbs(url_dir_path)
+
     return render(request, "view_directory.html", {
         "repository": repository,
+        "changed_files": changed_files,
+        "unchanged_files": unchanged_files,
+        "bcs": bcs
+        })
+
+def _view_repository_root(request, repository):
+    """ A view for the repository root that also displays all uncommitted files 
+    within the repo. """
+
+    f_info = {
+            "Name": lambda o: repository.rel_node_path(o),
+            "Type": lambda o: o.ftype,
+            "Edit": lambda o: o.generate_html(
+                "<a href='{}'>{}</a>",
+                reverse('view_file_or_directory', args=[repository.repository.name, repository.rel_node_path(o)]),
+                "Edit")
+            } 
+    bcs = generate_breadcrumbs("")
+
+    directory = repository.as_directory
+    changed_files = [f.create_info(f_info) for f in repository.all_changed_files()]
+    unchanged_files = [f.create_info(f_info) for f in directory.display_files()]
+
+    if request.method == 'POST':
+        commit_form = CommitForm(request.POST)
+        if commit_form.is_valid():
+            message = commit_form.cleaned_data['message']
+            repository.add_commit_and_push(message)
+            commit_form = CommitForm()
+    else:
+        commit_form = CommitForm()
+
+    return render(request, "view_repository_root.html", {
+        "repository": repository,
+        "commit_form": commit_form,
+        "changed_files": changed_files,
+        "unchanged_files": unchanged_files,
         "bcs": bcs
         })
 
@@ -68,16 +110,22 @@ def _view_file(request, repository, url_file_path):
     """
     fs_full_path = os.path.join(repository.path, url_file_path)
     f = to_file_type(BaseFile(fs_full_path))
-
-
+    
     bcs = generate_breadcrumbs(url_file_path)
+
     if request.method == 'POST':
         form = XMLForm(request.POST)
         if form.is_valid():
             new_text = form.cleaned_data['text']
             f.write(new_text)
             form = XMLForm(initial={'text':new_text})
-            return render(request, "view_file.html", {"f": f, "form": form})
+            return render(request, 
+                    "view_file.html", 
+                    {"f": f, 
+                    "repository": repository,
+                    "form": form, 
+                    "bcs": bcs})
+
     else:
         form = XMLForm(initial={'text':f.text})
 

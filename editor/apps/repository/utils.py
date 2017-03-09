@@ -1,5 +1,7 @@
-import git
+import itertools as it
 
-class MyProgressPrinter(git.RemoteProgress):
-    def update(self, op_code, cur_count, max_count=None, message=''):
-        print(op_code, cur_count, max_count, cur_count / (max_count or 100.0), message or "NO MESSAGE")
+# from https://docs.python.org/dev/library/itertools.html#itertools-recipes
+def partition(pred, iterable):
+    t1, t2 = it.tee(iterable)
+    return it.filterfalse(pred, t1), filter(pred, t2)
+

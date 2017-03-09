@@ -1,5 +1,6 @@
 from django.db import models
 from django import forms
+from django.utils.functional import *
 
 from editor.apps.files.models import *
 
@@ -7,8 +8,7 @@ TEXT_GENERATION_FUNCTIONS = ()
 EDIT_ACTION_FUNCTIONS = ()
 
 class XMLEditForm(models.Model):
-    FILE_TYPE_CHOICES =() #tuple((ft().ftype, ft().ftype) for ft in TEITypedXMLFile.__subclasses__())
-    file_type = models.CharField(max_length=100, choices=FILE_TYPE_CHOICES)
+    file_type = models.CharField(max_length=100, choices=tei_file_type_choices())
     form_fields = models.ManyToManyField('XMLEditField')
 
     def __str__(self):
@@ -41,4 +41,3 @@ class XMLEditField(models.Model):
     def generate(self):
         field = FIELDS[f.field_type]
         return field["field_class"](**field)
-

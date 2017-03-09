@@ -8,9 +8,13 @@ class StandardCharField():
         self.mode = mode
         self.field_class = forms.CharField
 
-    def create_and_initialise(ft):
-        xpath_node = ft.ns_xpath(self.xpath)
-        return CharField(initial=xpath_node) 
+    def initialise_field(self, typed_file):
+        xpath_node = typed_file.ns_xpath(self.xpath)
+        return self.name, self.field_class(initial=xpath_node)
+
+    def process_field(self, typed_file):
+
+        return typed_file
 
 def append(element, text_function):
     """Appends the results of at text generation function to an element. 

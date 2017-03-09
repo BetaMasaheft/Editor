@@ -18,8 +18,11 @@ class XMLForm(forms.Form):
     name = "xml_form"
     text = forms.CharField(widget=AceWidget(mode='xml', **ace_options))
 
-def pseudo_dynamic_form(f):
+def pseudo_dynamic_form(typed_file):
     form = forms.Form()
-    initial_text = f.ns_xpath("/ns:TEI/ns:text/ns:body/ns:listPlace/ns:place/ns:placeName/text()")[0]
-    form.fields['placename'] = forms.CharField(initial=initial_text)
+    xpath = "/ns:TEI/ns:text/ns:body/ns:listPlace/ns:place/ns:placeName/text()"
+    fields = [StandardCharField('placename', xpath, replace)]
+    for f in fields:
+        name, field = f.initialise_field(typed_file)
+        form.fields[name] = field
     return form
