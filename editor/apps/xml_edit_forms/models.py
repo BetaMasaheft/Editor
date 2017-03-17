@@ -2,9 +2,18 @@ from django.db import models
 from django import forms
 from django.utils.functional import *
 
+from django_ace import AceWidget
+
 from editor.apps.files.models import *
 
 from .fields import *
+
+ace_options = {
+        'theme': 'kuroir', 
+        'width': '100%', 
+        'height': '600px',
+        'wordwrap': True,
+        }
 
 class XMLEditForm(models.Model):
     form_name = models.CharField(
@@ -39,6 +48,7 @@ class XMLEditForm(models.Model):
             typed_file = f.process(typed_file, data)
         return typed_file
 
+
 class XMLEditField(models.Model):
     field_name = models.CharField(
             max_length=100,
@@ -69,3 +79,26 @@ class XMLEditField(models.Model):
     def generate(self):
         field = assign_xml_field(self.form_field)
         return field(self.field_name, self.xpath, self.edit_action)
+
+class XMLForm():
+    form_name = "xml_form"
+    file_type = "*"
+
+    def __str__(self):
+        return "{} - {}".format(
+                self.file_type, 
+                self.form_name
+                )
+
+    def create_and_populate(typed_file):
+        form = forms.Form
+        form.base_fields['text'] = forms.CharField(
+                initial=typed_file.text,
+                widget=AceWidget(mode='xml', **ace_options)
+                )
+        return form
+
+    def process_form(populated_form, typed_file):
+        typed_file.text = populated_form.cleaned_data['text']
+        return typed_file
+

@@ -16,7 +16,6 @@ class BaseXMLField():
     
     def populate(self, typed_file):
         xpath_node = typed_file.ns_xpath(self.xpath).text
-        print(self.field_kwargs)
         return self.name, self.field_class(initial=xpath_node, **self.field_kwargs)
 
     def process(self, typed_file, content):

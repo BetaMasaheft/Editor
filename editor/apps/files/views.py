@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.conf import settings
 from django.urls import reverse
+from django.utils.html import *
 from django.contrib.auth.decorators import login_required
 
 from .models import *
@@ -37,14 +38,21 @@ def edit_html(repo_name, file_name):
 
 def _view_directory(request, repository, url_dir_path):
     """ List all files in the given directory. """
+    def all_form_urls(typed_file):
+        out = ""
+        for f in form_names_for_typed_file(typed_file):
+            out += format_html("<a href='{}?form_type={}'>{}</a> ",
+                    reverse('view_file_or_directory', 
+                        args=[repository.repository.name, repository.rel_node_path(typed_file)]
+                        ), f, f)
+        return format_html(out)
+
     f_info = {
-            "Name": lambda o: o.name,
+            "Name": lambda o: repository.rel_node_path(o),
             "Type": lambda o: o.ftype,
-            "Edit": lambda o: o.generate_html(
-                "<a href='{}'>{}</a>",
-                reverse('view_file_or_directory', args=[repository.repository.name, os.path.join(url_dir_path, o.name)]),
-                "Edit")
+            "Edit": lambda o: all_form_urls(o),
             } 
+
     fs_full_path = os.path.join(repository.path, url_dir_path)
 
     directory = Directory(fs_full_path)
@@ -67,14 +75,21 @@ def _view_repository_root(request, repository):
     """ A view for the repository root that also displays all uncommitted files 
     within the repo. """
 
+    def all_form_urls(typed_file):
+        out = ""
+        for f in form_names_for_typed_file(typed_file):
+            out += format_html("<a href='{}?form_type={}'>{}</a>",
+                    reverse('view_file_or_directory', 
+                        args=[repository.repository.name, repository.rel_node_path(typed_file)]
+                        ), f, f)
+        return format_html(out)
+
     f_info = {
             "Name": lambda o: repository.rel_node_path(o),
             "Type": lambda o: o.ftype,
-            "Edit": lambda o: o.generate_html(
-                "<a href='{}'>{}</a>",
-                reverse('view_file_or_directory', args=[repository.repository.name, repository.rel_node_path(o)]),
-                "Edit")
+            "Edit": lambda o: all_form_urls(o),
             } 
+
     bcs = generate_breadcrumbs("")
 
     directory = repository.as_directory
@@ -112,8 +127,11 @@ def _view_file(request, repository, url_file_path):
     
     bcs = generate_breadcrumbs(url_file_path)
 
-    form_model = forms_for_typedfile(f).first()
+    form_type = request.GET.get('form_type', 'xml_form')
+
+    form_model = form_lookup_for_typed_file(f, form_type)
     form = form_model.create_and_populate(f) 
+
     if request.method == 'POST':
         form = form(request.POST)
         if form.is_valid():
@@ -129,15 +147,6 @@ def _view_file(request, repository, url_file_path):
              "form": form, 
              "bcs": bcs
              })
-
-def _edit_file(request, repository, url_file_path, form_type="text_form"):
-
-    fs_full_path = os.path.join(repository.path, url_file_path)
-    file_path = os.path.join(settings.DATA_DIR, repository_name, file_name)
-    f = to_file_type(BaseFile(file_path))
-    form = generate_form(form_type, f)
-
-    return render(request, "dynamic_edit_file.html", {"f": f, "form": form})
 
 def generate_breadcrumbs(path):
     def _format_breadcrumbs(breadcrumbs, path):

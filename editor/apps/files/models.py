@@ -22,9 +22,6 @@ class BaseNode():
     def create_info(self, d):
         return {k: f(self) for k,f in d.items()}
 
-    def generate_html(self, fmt_str, *args):
-        return format_html(fmt_str, *args)
-
 class Directory(BaseNode):
 
     def _f_path(self, f_name):
