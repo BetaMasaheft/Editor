@@ -62,7 +62,7 @@ class BaseFile(BaseNode):
 
     def write(self, text):
         with open(self.path, 'w') as file_out:
-            text = file_out.write(text)
+            file_out.write(text)
 
 class HiddenDirectory(Directory): pass
 
@@ -93,18 +93,32 @@ class XMLFile(BaseXMLFile):
             namespace = self.namespace
         return self.parsed_tree.xpath(xpath, 
                 namespaces={'ns': namespace}
-                )
+                )[0]
+
+    def set_at_xpath(self, xpath, new_text):
+        node = self.ns_xpath(xpath)
+        if node is not None:
+            node.text = new_text
+            return True
+        return False
 
     def string_at_xpath(self, xpath, string):
         """ Tests if a given string exists at an xpath. """
-        results = self.ns_xpath(xpath)
-        if results:
-            if results[0] == string:
+        result = self.ns_xpath(xpath)
+        if result:
+            if result == string:
                 return True
             else:
                 return False
         else:
             return False
+
+    def write(self, t=None):
+        if not t:
+            self.parsed_tree.write(self.path)
+        else:
+            with open(self.path, 'w') as file_out:
+                file_out.write(t)
 
 class TEITypedXMLFile(XMLFile):
     type_xpath = "/ns:TEI/@type"

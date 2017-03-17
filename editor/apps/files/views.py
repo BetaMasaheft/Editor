@@ -6,8 +6,7 @@ from django.contrib.auth.decorators import login_required
 from .models import *
 from .constructors import *
 
-from editor.apps.xml_edit_forms.utils import generate_form
-from editor.apps.xml_edit_forms.forms import *
+from editor.apps.xml_edit_forms.utils import *
 from editor.apps.repository.models import * 
 from editor.apps.repository.forms import * 
 from editor.apps.repository.utils import * 
@@ -113,21 +112,15 @@ def _view_file(request, repository, url_file_path):
     
     bcs = generate_breadcrumbs(url_file_path)
 
+    form_model = forms_for_typedfile(f).first()
+    form = form_model.create_and_populate(f) 
     if request.method == 'POST':
-        form = XMLForm(request.POST)
+        form = form(request.POST)
         if form.is_valid():
-            new_text = form.cleaned_data['text']
-            f.write(new_text)
-            form = XMLForm(initial={'text':new_text})
-            return render(request, 
-                    "view_file.html", 
-                    {"f": f, 
-                    "repository": repository,
-                    "form": form, 
-                    "bcs": bcs})
-
+            f = form_model.process_form(form, f)
+            f.write()
     else:
-        form = XMLForm(initial={'text':f.text})
+        form = form()
 
     return render(request, 
             "view_file.html", 
