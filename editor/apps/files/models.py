@@ -133,6 +133,25 @@ class TEIWork(TEITypedXMLFile):
 class TEIManuscript(TEITypedXMLFile):
     type_string = "mss"
 
+def _subclasses(cl):
+    sub = cl.__subclasses__()
+    if sub:
+        for c in sub:
+            sub.extend(_subclasses(c))
+    return set(sub)
+
+def all_xml_types():
+    return _subclasses(BaseXMLFile)
+
+def all_xml_type_names():
+    return [x().ftype for x in all_xml_types()]
+
+def all_file_types():
+    return _subclasses(BaseFile)
+
+def all_file_type_names():
+    return [x().ftype for x in all_file_types()]
+
 def tei_typed_xml_file_types():
     return TEITypedXMLFile.__subclasses__()
 

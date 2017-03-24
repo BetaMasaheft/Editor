@@ -3,17 +3,11 @@ from django_ace import AceWidget
 from .models import *
 from .fields import *
 
-ace_options = {
-        'theme': 'kuroir', 
-        'width': '100%', 
-        'height': '600px',
-        'wordwrap': True,
-        }
+class DynamicForm(forms.Form):
+    """ Provides a form which can have extra dynamic fields appended 
+    prior to initialisation. """
+    dynamic_fields = {}
 
-class TextForm(forms.Form):
-    name = "text_form"
-    text = forms.CharField(widget=AceWidget(mode='text', **ace_options))
-
-class XMLForm(forms.Form):
-    name = "xml_form"
-    text = forms.CharField(widget=AceWidget(mode='xml', **ace_options))
+    def __init__(self):
+        super(DynamicForm, self).__init__()
+        self.fields.update(self.dynamic_fields)

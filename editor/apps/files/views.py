@@ -4,8 +4,9 @@ from django.urls import reverse
 from django.utils.html import *
 from django.contrib.auth.decorators import login_required
 
-from .models import *
 from .constructors import *
+from .models import *
+from .utils import *
 
 from editor.apps.xml_edit_forms.utils import *
 from editor.apps.repository.models import * 
@@ -31,26 +32,15 @@ def view_file_or_directory(request, repository_name, url_node_path=""):
     else: 
         return _view_file(request, repository, url_node_path)
 
-def edit_html(repo_name, file_name):
-    return format_html("<a href='{}'>{}</a>",
-            reverse('edit_file', args=[repo_name, file_name]),
-            "Edit")
-
 def _view_directory(request, repository, url_dir_path):
     """ List all files in the given directory. """
-    def all_form_urls(typed_file):
-        out = ""
-        for f in form_names_for_typed_file(typed_file):
-            out += format_html("<a href='{}?form_type={}'>{}</a> ",
-                    reverse('view_file_or_directory', 
-                        args=[repository.repository.name, repository.rel_node_path(typed_file)]
-                        ), f, f)
-        return format_html(out)
+
+    url_gen = NodeURLFactory(repository)
 
     f_info = {
             "Name": lambda o: repository.rel_node_path(o),
             "Type": lambda o: o.ftype,
-            "Edit": lambda o: all_form_urls(o),
+            " ": lambda o: url_gen.format_node_urls(o) ,
             } 
 
     fs_full_path = os.path.join(repository.path, url_dir_path)
@@ -74,20 +64,13 @@ def _view_directory(request, repository, url_dir_path):
 def _view_repository_root(request, repository):
     """ A view for the repository root that also displays all uncommitted files 
     within the repo. """
-
-    def all_form_urls(typed_file):
-        out = ""
-        for f in form_names_for_typed_file(typed_file):
-            out += format_html("<a href='{}?form_type={}'>{}</a>",
-                    reverse('view_file_or_directory', 
-                        args=[repository.repository.name, repository.rel_node_path(typed_file)]
-                        ), f, f)
-        return format_html(out)
+    
+    url_gen = NodeURLFactory(repository)
 
     f_info = {
             "Name": lambda o: repository.rel_node_path(o),
             "Type": lambda o: o.ftype,
-            "Edit": lambda o: all_form_urls(o),
+            " ": lambda o: url_gen.format_node_urls(o) ,
             } 
 
     bcs = generate_breadcrumbs("")
@@ -148,12 +131,4 @@ def _view_file(request, repository, url_file_path):
              "bcs": bcs
              })
 
-def generate_breadcrumbs(path):
-    def _format_breadcrumbs(breadcrumbs, path):
-        head, tail = os.path.split(path)
-        if head:
-            breadcrumbs = _format_breadcrumbs(breadcrumbs, head)
-        breadcrumbs.append({"label": tail, "url_path": path})
-        return breadcrumbs
-    return _format_breadcrumbs([], path)
 

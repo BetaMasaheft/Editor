@@ -7,6 +7,7 @@ from django_ace import AceWidget
 from editor.apps.files.models import *
 
 from .fields import *
+from .forms import *
 
 ace_options = {
         'theme': 'kuroir', 
@@ -33,13 +34,10 @@ class XMLEditForm(models.Model):
         return (field.generate() for field in self.form_fields.all())
 
     def create_and_populate(self, typed_file):
-        form = forms.Form
-        for f in self.generate_fields():
-            name, field = f.populate(typed_file)
-            #TODO: make sure this isn't a terrible idea
-            # the .fields attribute isn't created till the object is initialised
-            # where it's created by a deep_copy from .base_fields.
-            form.base_fields[name] = field
+        form = DynamicForm
+        form.dynamic_fields = dict(
+                f.populate(typed_file) for f in self.generate_fields()
+                )
         return form
 
     def process_form(self, populated_form, typed_file):
@@ -95,6 +93,28 @@ class XMLForm():
         form.base_fields['text'] = forms.CharField(
                 initial=typed_file.text,
                 widget=AceWidget(mode='xml', **ace_options)
+                )
+        return form
+
+    def process_form(populated_form, typed_file):
+        typed_file.text = populated_form.cleaned_data['text']
+        return typed_file
+
+class TextForm():
+    form_name = "text_form"
+    file_type = "*"
+
+    def __str__(self):
+        return "{} - {}".format(
+                self.file_type, 
+                self.form_name
+                )
+
+    def create_and_populate(typed_file):
+        form = forms.Form
+        form.base_fields['text'] = forms.CharField(
+                initial=typed_file.text,
+                widget=AceWidget(mode='text', **ace_options)
                 )
         return form
 
